@@ -1,7 +1,23 @@
+pip>=23.1.2
 aiogram>=3.0.0b7
 environs~=9.0
 redis
 betterlogging
+aiogram-dialog==2.0.0b17
+yt_dlp>=2023.3.4
+moviepy>=1.0.3
+openpyxl>=3.1.1
+docx2txt>=0.8
+python-pptx>=0.6.21
+pdf2docx>=0.5.6
+pytesseract>=0.3.10
+Pillow>=9.4.0
+docx2pdf>=0.1.8
+sqlalchemy>=1.4.47
+psycopg2-binary>=2.9.6
+opencv-python>=4.7.0.72
+numpy>=1.24.3
+
 
 # # For enabling api:
 # backoff

@@ -1,27 +1,90 @@
-version: '3.3'
+version: '3.7'
 
 services:
   bot:
-    image: "${BOT_IMAGE_NAME}"
-    container_name: "${BOT_CONTAINER_NAME}"
-    stop_signal: SIGINT
+    image: "${BOT_IMAGE_NAME:-tg_bot-image}"
+    container_name: "${BOT_CONTAINER_NAME:-tg_bot-container}"
     build:
       context: .
-    working_dir: "/usr/src/app/${BOT_NAME}"
+    working_dir: "/usr/src/app/${BOT_NAME:-tg_bot}"
+    stop_signal: SIGINT
     volumes:
-      - .:/usr/src/app/${BOT_NAME}
+      - .:/usr/src/app/${BOT_NAME:-tg_bot}
+      - /var/lib/telegram-bot-api:/var/lib/telegram-bot-api
     command: python3 -m bot
-    restart: always
+    restart: unless-stopped
     env_file:
       - ".env"
     networks:
-      - tg_bot
+      - bot
+    depends_on:
+      - db
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - bot
 
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 80:8080
+    networks:
+      - bot
+
+  api:
+    image: aiogram/telegram-bot-api:latest
+    restart: always
+    env_file:
+      - ".env"
+    ports:
+      - "8081:8081"
+    volumes:
+      - /var/lib/telegram-bot-api:/var/lib/telegram-bot-api
+
+    networks:
+      - bot
+
+networks:
+  bot:
+    driver: bridge
+
+
+
+
+#version: '3.3'
+#
+#services:
+#  bot:
+#    image: "${BOT_IMAGE_NAME}"
+#    container_name: "${BOT_CONTAINER_NAME}"
+#    stop_signal: SIGINT
+#    build:
+#      context: .
+#    working_dir: "/usr/src/app/${BOT_NAME}"
+#    volumes:
+#      - .:/usr/src/app/${BOT_NAME}
+#    command: python3 -m bot
+#    restart: always
+#    env_file:
+#      - ".env"
+#    networks:
+#      - tg_bot
+#
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "200k"
+#        max-file: "10"
 #
 #  #   To enable postgres uncomment the following lines
 #  #  http://pgconfigurator.cybertec.at/ For Postgres Configuration
@@ -96,10 +159,10 @@ services:
 #    networks:
 #      - tg_bot
 
-
-networks:
-  tg_bot:
-    driver: bridge
+#
+#networks:
+#  tg_bot:
+#    driver: bridge
 
 # Uncomment the following lines if you want to use a volume for the database
 #volumes:
