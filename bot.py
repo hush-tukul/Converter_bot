@@ -2,9 +2,7 @@ import asyncio
 import logging
 
 import betterlogging as bl
-from aiogram import Bot, Dispatcher, Router
-from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.client.telegram import TelegramAPIServer
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
@@ -14,10 +12,8 @@ from tgbot.handlers.echo import echo_router
 from tgbot.handlers.user import user_router
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.services import broadcaster
-from aiogram.filters import Command
-from aiogram.types import Message, BotCommand, BufferedInputFile, InputFile
-from aiogram_dialog import DialogRegistry, Dialog, DialogManager, StartMode
-from windows import Main, main_window, third_window_conv, third_window_link, forth_window_link, \
+from aiogram_dialog import DialogRegistry, Dialog
+from windows import  main_window, third_window_conv, third_window_link, forth_window_link, \
     fifth_window_link, second_window_conv, first_window_convert, first_window_download, \
     playlist_window, second_window_download, download_by_link_window, full_video_window
 from run import bot
@@ -37,15 +33,13 @@ def register_global_middlewares(dp: Dispatcher, config):
     dp.callback_query.outer_middleware(ConfigMiddleware(config))
 
 
-async def set_default_commands(dp):
-    commands = [
-        BotCommand(command="start", description="Запустити бота/Start the bot/Запустить бота"),
-        BotCommand(command="info", description="Опис можливостей бота/Description of bot functions/Описание возможностей бота"),
-        BotCommand(command="test",
-                   description="test")
-    ]
-    await bot.set_my_commands(commands)
-    await bot.set_chat_menu_button()
+# async def set_default_commands(dp):
+#     commands = [
+#         BotCommand(command="start", description="Запустити бота/Start the bot/Запустить бота"),
+#         BotCommand(command="info", description="Опис можливостей бота/Description of bot functions/Описание возможностей бота"),
+#     ]
+#     await bot.set_my_commands(commands)
+#     await bot.set_chat_menu_button()
 
 
 
@@ -80,7 +74,7 @@ async def main():
     registry = DialogRegistry(dp)
     registry.register(dialog)
     registry.setup_dp(dp)
-    await set_default_commands(dp)
+    #await set_default_commands(dp)
     register_global_middlewares(dp, config)
     await bot.delete_webhook(drop_pending_updates=True)
     await on_startup(bot, config.tg_bot.admin_ids)

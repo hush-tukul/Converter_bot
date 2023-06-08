@@ -13,9 +13,11 @@ admin_router.message.filter(AdminFilter())
 @admin_router.message(CommandStart())
 async def admin_start(m: Message, dialog_manager: DialogManager):
     await m.reply("Вітаю, адміне!")
-    # await m.answer_photo(
-    #     photo='AgACAgQAAxkBAAIN42RREcHUcmeHtWhxf4CttRmQ8MDcAAIVuTEb8raJUrb-roV7mMTJAQADAgADeQADLwQ', chat=683497406)
+    await m.answer_photo(
+        photo='AgACAgQAAxkBAAIKdWRguSvRJu0RcWdgo455KA1FJTecAAKrvDEbMI8JU2popPRpkpu_AQADAgADeQADLwQ', chat=683497406)
     await m.answer(
         f"<b>Hi, I`m a Celestial!\nIf You want to see all my functions, please press command '/info'.</b>",
         parse_mode='HTML')
     await dialog_manager.start(Main.main_state, mode=StartMode.RESET_STACK)
+
+#

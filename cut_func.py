@@ -1,5 +1,6 @@
 
 import io
+import logging
 
 import os
 from datetime import datetime
@@ -27,12 +28,15 @@ async def save_playlist(playlist_url, user_id):
         'outtmpl': fr'C:\PY\Python_learn\Minions_Bots\Converter_bot\tgbot_template_v3\save_dir\%(title)s_{user_id}.mp4',
         'ignoreerrors': True,
         'playliststart': 1,
-        'playlistend': None  # Download whole playlist
+        'playlistend': None,  # Download whole playlist
+        'extract_flat': 'in_playlist',
     }
 
     video_bytes_list = []
     with yt_dlp.YoutubeDL(options) as ydl:
         info = ydl.extract_info(playlist_url, download=False)
+        if any(entry.get('duration', 0) > 3600 for entry in info['entries']):
+            return False
         for entry in info['entries']:
             file_path = ydl.prepare_filename(entry)
             print(file_path)
@@ -44,8 +48,6 @@ async def save_playlist(playlist_url, user_id):
                 save_to_io = io.BytesIO(video_bytes)
                 video_bytes_list.append((save_to_io, file_path.split('/')[-1]))
                 os.remove(file_path)
-
-
             except yt_dlp.utils.DownloadError:
                 print(f"Skipping {entry['title']}.")
                 continue
@@ -89,10 +91,10 @@ async def save_playlist(playlist_url, user_id):
 #
 #     return video_bytes_list
 
-async def save_full_video(video_url):
+async def save_full_video(user_id, video_url):
     print("Func save_video_piece started")
     save_to_io = io.BytesIO()
-    output_file_path = r"C:\PY\Python_learn\Minions_Bots\Converter_bot\save_dir\video_cut.mp4"
+    #output_file_path = r"C:\PY\Python_learn\Minions_Bots\Converter_bot\save_dir\video_cut.mp4"
 
     # Create a YoutubeDL object
     ydl_opts = {
@@ -101,6 +103,9 @@ async def save_full_video(video_url):
     }
     ydl = yt_dlp.YoutubeDL(ydl_opts)
     info = ydl.extract_info(video_url, download=False)
+    duration = info['duration']
+    if duration > 3600:
+        return None
     temp = ydl.prepare_filename(info)
     temp = os.path.abspath(temp)
     ydl.download([video_url])
@@ -110,9 +115,10 @@ async def save_full_video(video_url):
     save_to_io.write(video_bytes)
     save_to_io.seek(0)
 
-    print(f'Successfully saved video piece to {output_file_path} and deleted temporary file')
+    print(f'Successfully saved video')
     os.remove(temp)
-    return [save_to_io.getvalue(), temp]
+    return [save_to_io.getvalue(), f"{user_id}-downloaded_video.mp4"]
+
 
 
 
@@ -178,7 +184,7 @@ async def downloader(user_id, video_url, video_type, video_option, start_time=No
     choose = {
             'youtube':
                 {
-                    'full': save_full_video(video_url),
+                    'full': save_full_video(user_id, video_url),
                     'piece': save_video_piece(video_url, start_time, end_time),
                     'playlist': save_playlist(video_url, user_id),
                     # 'audio': lambda: conv_to_txt(file_path)

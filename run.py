@@ -9,12 +9,13 @@ from tgbot.config import load_config
 
 load_dotenv(find_dotenv())
 
-token = os.getenv('TOKEN2')
+#token = os.getenv('TOKEN2')
 api_key = os.getenv('API_KEY')
 organization = os.getenv('ORG')
 #bot = Bot(token, parse_mode="HTML")
 
 config = load_config(".env")
+token = os.getenv('TOKEN')
 local_server = TelegramAPIServer.from_base("http://api:8081")
 bot = Bot(token=config.tg_bot.token, parse_mode='HTML', session=AiohttpSession(api=local_server))
 db_link = os.getenv('LINK')

@@ -1,4 +1,4 @@
-import asyncio
+
 import io
 import logging
 import os
@@ -11,13 +11,11 @@ import numpy as np
 from docx2txt import docx2txt
 
 from pptx import Presentation
-from docx2pdf import convert
-from pdf2docx import parse
+from pdf2docx import  Converter
 import pytesseract
 from PIL import Image, ImageEnhance, ImageFilter
 
 from run import bot
-from io import BytesIO
 
 async def conv_to_jpeg(file_path: str, user_id) -> bytes:
     save_to_io = io.BytesIO()
@@ -72,19 +70,42 @@ async def conv_to_pdf(file_path: str) -> bytes:
 
 
 
-async def conv_to_docx(file_path: str, user_id) -> bytes:
-    save_to_io = io.BytesIO()
-    print('func started')
-    converted = fr"C:\PY\Python_learn\Minions_Bots\Converter_bot\tgbot_template_v3\save_dir\new_temp-{user_id}.docx"
-    await asyncio.to_thread(parse, file_path, converted)
-    with open(converted, 'rb') as f:
-        pdf_bytes = f.read()
 
-    save_to_io.write(pdf_bytes)
-    save_to_io.seek(0)
-    os.remove(converted)
-    print('docx created')
-    return save_to_io.getvalue()
+
+async def conv_to_docx(file_path: str) -> bytes:
+    docx_filename = os.path.splitext(os.path.basename(file_path))[0] + '.docx'
+
+    # Set the output file path for the DOCX file
+    docx_filepath = os.path.join(os.path.dirname(file_path), docx_filename)
+
+    # Convert PDF to DOCX using pdf2docx
+    cv = Converter(file_path)
+    cv.convert(docx_filepath, start=0, end=None)
+    cv.close()
+
+    # Read the contents of the DOCX file in bytes
+    with open(docx_filepath, 'rb') as f:
+        docx_bytes = f.read()
+
+    # Remove the temporary DOCX file
+    os.remove(docx_filepath)
+
+    return docx_bytes
+
+
+# async def conv_to_docx(file_path: str, user_id) -> bytes:                      #WORKING CODE!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#     save_to_io = io.BytesIO()
+#     print('func started')
+#     converted = fr"C:\PY\Python_learn\Minions_Bots\Converter_bot\tgbot_template_v3\save_dir\new_temp-{user_id}.docx"
+#     await asyncio.to_thread(parse, file_path, converted)
+#     with open(converted, 'rb') as f:
+#         pdf_bytes = f.read()
+#
+#     save_to_io.write(pdf_bytes)
+#     save_to_io.seek(0)
+#     os.remove(converted)
+#     print('docx created')
+#     return save_to_io.getvalue()
 
 
 async def conv_to_txt(file_id, user_id) -> bytes:
@@ -180,7 +201,7 @@ async def conv_to(file_path, file_id,  show_type_from, show_type_to, user_id) ->
             'txt': lambda: conv_to_txt(file_id, user_id)
         },
         'pdf': {
-            'docx': lambda: conv_to_docx(file_path, user_id)
+            'docx': lambda: conv_to_docx(file_path)
         },
         'jpeg': {
             'txt': lambda: conv_to_txt(file_id, user_id)

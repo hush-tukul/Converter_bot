@@ -1,4 +1,4 @@
-import imghdr
+
 import logging
 import re
 import time
@@ -7,14 +7,13 @@ from datetime import datetime
 from io import BytesIO
 from typing import Any
 
-import aiofiles
 import yt_dlp
 from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import MessageInput
 
 from big_list import options
-from conv_func import conv_to, conv_to_pdf
+from conv_func import conv_to
 from cut_func import downloader
 from db import save_file
 from insta_downloader import download_instagram_video
@@ -221,12 +220,14 @@ async def w_handle_playlist(message: Message, input: MessageInput, dialog_manage
         link = message.text
         source = dialog_manager.dialog_data.get('source', 0)
         r = await downloader(message.from_user.id, link, source, action)
-        for i in r:
-            input_file_d = BufferedInputFile(i[0].getvalue(), filename=f'C:\PY\Python_learn\Minions_Bots\Converter_bot\convert_directory\{i[1]}')
-            end = time.time()
-            await message.answer_video(input_file_d,
-                                       caption=f"File converted successfully!\nTime: {round(end - start, 3)} seconds")
-
+        if r:
+            for i in r:
+                input_file_d = BufferedInputFile(i[0].getvalue(), filename=f'C:\PY\Python_learn\Minions_Bots\Converter_bot\convert_directory\{i[1]}')
+                end = time.time()
+                await message.answer_video(input_file_d,
+                                           caption=f"File converted successfully!\nTime: {round(end - start, 3)} seconds")
+        else:
+            await bot.send_message(chat_id=message.chat.id, text=f"Some videos in the playlist are longer than one hour, please choose another playlist.")
     else:
         await bot.send_message(chat_id=message.chat.id, text=f"Wrong link! Please send correct link.")
 
@@ -241,6 +242,7 @@ async def full_video_downloader(dialog_manager: DialogManager, **kwargs):
 
 
 async def w_full_video_downloader(message: Message, input: MessageInput, dialog_manager: DialogManager):
+    start = time.time()
     print("You get to w_full_video_downloader")
     source = dialog_manager.dialog_data.get('source', 0)
     action = dialog_manager.dialog_data.get('action', 0)
@@ -250,16 +252,63 @@ async def w_full_video_downloader(message: Message, input: MessageInput, dialog_
     if any([True if i in message.text else False for i in g]):
         save_file(message.message_id, source, action, message.from_user.id,
                   message.from_user.username)
-        start = time.time()
-        link = message.text
-        cut_start = dialog_manager.dialog_data.get('start', 0)
-        cut_end = dialog_manager.dialog_data.get('end', 0)
-        r = await downloader(message.from_user.id, link, source, action, cut_start, cut_end)
 
-        input_file_d = BufferedInputFile(r[0], filename=f'{r[1]}')
-        end = time.time()
-        await message.answer_document(input_file_d,
-                                   caption=f"File downloaded successfully!\nTime: {round(end - start, 3)} seconds")
+        link = message.text
+        r = await downloader(message.from_user.id, link, source, action)
+
+        if r:
+            input_file_d = BufferedInputFile(r[0], filename=r[1])
+            end = time.time()
+            await message.answer_document(input_file_d,
+                                       caption=f"File downloaded successfully!\nTime: {round(end - start, 3)} seconds")
+
+        else:
+            await bot.send_message(chat_id=message.chat.id, text=f"Video is too long. Please choose a video not longer than an hour.")
+
+
+#WITH TIMER WORKING!!!!!!!!!!!!!!!!!!!!
+# async def w_full_video_downloader(message: Message, input: MessageInput, dialog_manager: DialogManager):
+#     print("You get to w_full_video_downloader")
+#     source = dialog_manager.dialog_data.get('source', 0)
+#     action = dialog_manager.dialog_data.get('action', 0)
+#     g = [
+#         'youtube.com/watch?', 'm.youtube.com/watch?', 'youtu.be/',
+#         'm.youtube.com/v', 'www.youtube.com/v']
+#     if any([True if i in message.text else False for i in g]):
+#         save_file(message.message_id, source, action, message.from_user.id,
+#                   message.from_user.username)
+#         start_time = time.monotonic()
+#         g = True
+#         # Send a message indicating that the download has started
+#         msg = await message.answer("Starting download...")
+#
+#         async def update_message():
+#             while g:
+#                 elapsed_time = time.monotonic() - start_time
+#                 # Update the message to show the elapsed time
+#                 await msg.edit_text(f"Downloading... Elapsed time: {elapsed_time:.1f} seconds")
+#                 await asyncio.sleep(0.8)
+#
+#         asyncio.create_task(update_message())
+#
+#         link = message.text
+#         r = await downloader(message.from_user.id, link, source, action)
+#
+#         if r:
+#             input_file_d = BufferedInputFile(r[0], filename=f'{r[1]}')
+#             end_time = time.monotonic()
+#             duration = end_time - start_time
+#             g = False
+#
+#             # Send the downloaded file and the total download time
+#             await msg.answer_document(input_file_d,
+#                                        caption=f"File downloaded successfully!\nTotal download time: {duration:.1f} seconds")
+#             await msg.delete()
+#         else:
+#             g = False
+#
+#             await bot.send_message(chat_id=message.chat.id, text=f"Video is too long. Please choose a video not longer than an hour.")
+#             await msg.delete()
 
 
 

@@ -17,6 +17,7 @@ async def start(m: Message, dialog_manager: DialogManager):
 
 @user_router.message(Command('info'))
 async def info(m: Message, dialog_manager: DialogManager):
+
     await m.answer(
         f"<b>Hi, I`m a Celestial!\nBelow You can find all my functions for today. Enjoy my service and be carefull with Your wishes."
         f"\n---------------------------------------FUNCTIONS---------------------------------------"
@@ -42,3 +43,7 @@ async def info(m: Message, dialog_manager: DialogManager):
         f"\n      -tt-video;</b>",
 
         parse_mode='HTML')
+
+
+
+
